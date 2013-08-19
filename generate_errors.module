@@ -43,6 +43,15 @@ function generate_errors_form($form, &$form_state) {
       t('4xx Client Error') => generate_errors_http_status_codes('4xx'),
       t('5xx Server Error') => generate_errors_http_status_codes('5xx'),
     ),
+    '#empty_option' => t('Manually specify'),
+    '#default_value' => 500,
+  );
+
+  $form['http_status']['http_status_specify_code'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Code only'),
+    '#description' => t('Manually specify HTTP Status Code, digits only'),
+    '#size' => 3,
   );
 
   $form['http_status']['trigger_no_exit'] = array(
@@ -59,6 +68,30 @@ function generate_errors_form($form, &$form_state) {
 }
 
 /**
+ * Validation handler for generate_errors_form().
+ */
+function generate_errors_form_validate($form, &$form_state) {
+  if ($form_state['values']['http_status_specify_code']) {
+    // Validate custom HTTP Status Code.
+    if (!preg_match('/^[1-5]\d{2}$/', $form_state['values']['http_status_specify_code'])) {
+      form_set_error('http_status_specify_code', t('You must specify a valid HTTP Status Code.'));
+    }
+    else {
+      // Clean up form.
+      $all_http_status_codes = generate_errors_http_status_codes();
+      // Manually specified, but it's actually a known code.
+      if (array_key_exists($form_state['values']['http_status_specify_code'], $all_http_status_codes)) {
+        $form_state['input']['http_status_code'] = $form_state['values']['http_status_specify_code'];
+        $form_state['input']['http_status_specify_code'] = '';
+      }
+      else {
+        $form_state['input']['http_status_code'] = '';
+      }
+    }
+  }
+}
+
+/**
  * Submit handler for generate_errors_form().
  */
 function generate_errors_form_submit($form, &$form_state) {
@@ -72,11 +105,18 @@ function generate_errors_form_submit($form, &$form_state) {
     'Set HTTP status code only',
     'Set HTTP status code and exit',
   ))) {
-    // Build list of all codes.
-    $all_http_status_codes = generate_errors_http_status_codes();
+    // Manually specified HTTP Status Code.
+    if (isset($form_state['values']['http_status_specify_code'])) {
+      $selected_code = $form_state['values']['http_status_specify_code'] . ' ' . t('Manually Triggered');
+    }
+    // Code selected from list.
+    else {
+      // Build list of all codes.
+      $all_http_status_codes = generate_errors_http_status_codes();
 
-    // Get code and label.
-    $selected_code = $all_http_status_codes[$form_state['values']['http_status_code']];
+      // Get code and label.
+      $selected_code = $all_http_status_codes[$form_state['values']['http_status_code']];
+    }
 
     // Set header.
     drupal_add_http_header('Status', $selected_code);
