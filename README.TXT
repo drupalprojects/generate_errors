@@ -30,8 +30,8 @@ generate errors.
 USAGE
 -----
 
-Generate Errors adds a normal menu item for to /generate_errors - use the new
-link in the menu or navigate directly to the interface.
+Generate Errors adds a normal menu item to /generate_errors - use the new link
+in the menu or navigate directly to the path.
 
 Choose the error that you wish to generate and click the associated submit
 button.
