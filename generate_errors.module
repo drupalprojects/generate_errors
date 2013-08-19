@@ -64,6 +64,51 @@ function generate_errors_form($form, &$form_state) {
     '#value' => 'Set HTTP status code and exit',
   );
 
+  // Throw exception.
+  $form['throw_exception'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Throw exception'),
+  );
+
+  $form['throw_exception']['description'] = array(
+    '#markup' => '<p>' . t('Throw a new Exception and do not catch it.') . '</p>',
+  );
+
+  $form['throw_exception']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Throw uncaught exception',
+  );
+
+  // Exhaust memory.
+  $form['exhaust_memory'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Exhaust memory'),
+  );
+  
+  $form['exhaust_memory']['description'] = array(
+    '#markup' => '<p>' . t('Executes an infinite loop designed to run out of memory.') . '</p>',
+  );
+
+  $form['exhaust_memory']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Exhaust memory',
+  );
+
+  // Undefined function.
+  $form['undefined_function'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Undefined function'),
+  );
+
+  $form['undefined_function']['description'] = array(
+    '#markup' => '<p>' . t('Call a function that does not exist.') . '</p>',
+  );
+
+  $form['undefined_function']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Call undefined function',
+  );
+
   return $form;
 }
 
@@ -141,6 +186,36 @@ function generate_errors_form_submit($form, &$form_state) {
     drupal_set_message(t('Generate Errors - set HTTP status code @code.', array(
       '@code' => $selected_code,
     )));
+  }
+
+  // Throw exception.
+  if ($form_state['values']['op'] == 'Throw uncaught exception') {
+    watchdog('generate errors', 'uid #@uid threw an uncaught exception', array(
+      '@uid' => $user->uid,
+    ));
+    drupal_set_message(t('Generate Errors - threw an uncaught exception.'));
+    throw new Exception('Exception thrown and not caught');
+  }
+
+  // Exhaust memory.
+  if ($form_state['values']['op'] == 'Exhaust memory') {
+    watchdog('generate errors', 'uid #@uid exhausted memory', array(
+      '@uid' => $user->uid,
+    ));
+    drupal_set_message(t('Generate Errors - exhausted memory.'));
+    $array = array();
+    while(1) {
+      $array[] = (object) range(0, 1000);
+    }
+  }
+
+  // Undefined function memory.
+  if ($form_state['values']['op'] == 'Call undefined function') {
+    watchdog('generate errors', 'uid #@uid called undefined function', array(
+      '@uid' => $user->uid,
+    ));
+    drupal_set_message(t('Generate Errors - called undefined function.'));
+    generate_errors_undefined_function();
   }
 }
 
