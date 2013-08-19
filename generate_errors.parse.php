@@ -3,4 +3,5 @@
  * @file
  * Intentional parse error.
  */
-fail
+
+FAIL

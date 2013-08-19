@@ -84,7 +84,7 @@ function generate_errors_form($form, &$form_state) {
     '#type' => 'fieldset',
     '#title' => t('Exhaust memory'),
   );
-  
+
   $form['exhaust_memory']['description'] = array(
     '#markup' => '<p>' . t('Executes an infinite loop designed to run out of memory.') . '</p>',
   );
@@ -209,7 +209,7 @@ function generate_errors_form_submit($form, &$form_state) {
     ));
     drupal_set_message(t('Generate Errors - exhausted memory.'));
     $array = array();
-    while(1) {
+    while (1) {
       $array[] = (object) range(0, 1000);
     }
   }
@@ -255,6 +255,9 @@ function generate_errors_form_submit($form, &$form_state) {
 
       case E_STRICT:
         class GenerateErrors {
+          /**
+           * Empty function.
+           */
           public function strict() {}
         }
         GenerateErrors::strict();
@@ -300,7 +303,7 @@ function generate_errors_http_status_codes($filter = 'all') {
     415 => t('415 Unsupported Media Type'),
     416 => t('416 Requested Range Not Satisfiable'),
     417 => t('417 Expectation Failed'),
-    418 => t('418 I\'m a teapot'),
+    418 => t("418 I'm a teapot"),
     419 => t('419 Authentication Timeout'),
     420 => t('420 Enhance Your Calm'),
     422 => t('422 Unprocessable Entity'),
@@ -316,7 +319,7 @@ function generate_errors_http_status_codes($filter = 'all') {
     450 => t('450 Blocked by Windows Parental Controls'),
     451 => t('451 Unavailable For Legal Reasons'),
   );
-  
+
   // 5xx Server Error.
   $http_status_codes['5xx'] = array(
     500 => t('500 Internal Server Error'),
