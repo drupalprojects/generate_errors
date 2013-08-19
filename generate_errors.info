@@ -1,1 +1,4 @@
 name = Generate Errors
+description = Intentionally trigger errors to test system configuration.
+package = Development
+core = 7.x
