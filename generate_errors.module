@@ -101,13 +101,25 @@ function generate_errors_form($form, &$form_state) {
   );
 
   $form['php_error']['description'] = array(
-    '#markup' => '<p>' . t('Trigger a PHP error.') . '</p>',
+    '#markup' => '<p>' . t('Execute !php, then trigger a PHP error.', array(
+      '!php' => '<tt>user_load(1, TRUE)</tt>',
+    )) . '</p>',
   );
 
   $form['php_error']['error_level'] = array(
     '#type' => 'select',
-    '#options' => generate_errors_php_errors(),
+    '#options' => array('none' => t('No error, just benchmark execution')) + generate_errors_php_errors(),
   );
+
+  $form['php_error']['frequency'] = array(
+    '#type' => 'select',
+    '#title' => t('How many times?'),
+    '#default_value' => 1,
+  );
+
+  foreach (array(1, 25, 50, 100, 1000, 10000, 100000) as $frequency) {
+    $form['php_error']['frequency']['#options'][$frequency] = number_format($frequency);
+  }
 
   $form['php_error']['submit'] = array(
     '#type' => 'submit',
@@ -216,58 +228,86 @@ function generate_errors_form_submit($form, &$form_state) {
 
   // PHP error.
   if ($form_state['values']['op'] == 'Trigger PHP error') {
-    $php_errors = generate_errors_php_errors();
-    watchdog('generate errors', 'uid #@uid triggered PHP error @error', array(
-      '@uid' => $user->uid,
-      '@error' => $php_errors[$form_state['values']['error_level']],
-    ));
-    drupal_set_message(t('Generate Errors - triggered PHP error @error.', array(
-      '@error' => $php_errors[$form_state['values']['error_level']],
-    )));
-    switch ($form_state['values']['error_level']) {
-      case E_ERROR:
-        generate_errors_fatal_error();
-        break;
-
-      case E_WARNING:
-        fopen();
-        break;
-
-      case E_PARSE:
-        require_once 'generate_errors.parse.php';
-        break;
-
-      case E_NOTICE:
-        $form_state['generate_errors_notice'];
-        break;
-
-      case E_USER_ERROR:
-        trigger_error('Generate E_USER_ERROR', E_USER_ERROR);
-        break;
-
-      case E_USER_WARNING:
-        trigger_error('Generate E_USER_WARNING', E_USER_WARNING);
-        break;
-
-      case E_USER_NOTICE:
-        trigger_error('Generate E_USER_NOTICE', E_USER_NOTICE);
-        break;
-
-      case E_STRICT:
-        class GenerateErrors {
-          /**
-           * Empty function.
-           */
-          public function strict() {}
-        }
-        GenerateErrors::strict();
-        break;
-
-      case E_RECOVERABLE_ERROR:
-        echo (string) new stdClass();
-        break;
-      
+    if ($form_state['values']['error_level'] == 'none') {
+      watchdog('generate errors', 'uid #@uid baseline execution benchmarked @frequency time(s)', array(
+        '@uid' => $user->uid,
+        '@frequency' => number_format($form_state['values']['frequency']),
+      ));
+      drupal_set_message(t('Generate Errors - baseline execution benchmark @frequency time(s).', array(
+        '@frequency' => number_format($form_state['values']['frequency']),
+      )));
     }
+    else {
+      $php_errors = generate_errors_php_errors();
+      watchdog('generate errors', 'uid #@uid triggered PHP error @error @frequency time(s)', array(
+        '@uid' => $user->uid,
+        '@error' => $php_errors[$form_state['values']['error_level']],
+        '@frequency' => number_format($form_state['values']['frequency']),
+      ));
+      drupal_set_message(t('Generate Errors - triggered PHP error @error @frequency time(s).', array(
+        '@error' => $php_errors[$form_state['values']['error_level']],
+        '@frequency' => number_format($form_state['values']['frequency']),
+      )));
+    }
+
+    $benchmark_start = microtime(TRUE);
+
+    for ($error_count = 0; $error_count < $form_state['values']['frequency']; $error_count++) {
+      // Load uid 1 without cache.
+      user_load(1, TRUE);
+      switch ($form_state['values']['error_level']) {
+        case E_ERROR:
+          generate_errors_fatal_error();
+          break;
+
+        case E_WARNING:
+          fopen();
+          break;
+
+        case E_PARSE:
+          require_once 'generate_errors.parse.php';
+          break;
+
+        case E_NOTICE:
+          $form_state['generate_errors_notice'];
+          break;
+
+        case E_USER_ERROR:
+          trigger_error('Generate E_USER_ERROR', E_USER_ERROR);
+          break;
+
+        case E_USER_WARNING:
+          trigger_error('Generate E_USER_WARNING', E_USER_WARNING);
+          break;
+
+        case E_USER_NOTICE:
+          trigger_error('Generate E_USER_NOTICE', E_USER_NOTICE);
+          break;
+
+        case E_STRICT:
+          class GenerateErrors {
+            /**
+             * Empty function.
+             */
+            public function strict() {}
+          }
+          GenerateErrors::strict();
+          break;
+
+        case E_RECOVERABLE_ERROR:
+          echo (string) new stdClass();
+          break;
+
+        default:
+          // No errors.
+          break;
+
+      }
+    }
+    drupal_set_message(t('Generate Errors - @frequency loops in @duration seconds.', array(
+      '@frequency' => number_format($form_state['values']['frequency']),
+      '@duration' => microtime(TRUE) - $benchmark_start,
+    )));
   }
 }
 
