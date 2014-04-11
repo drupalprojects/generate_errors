@@ -1,7 +1,4 @@
-INTRODUCTION
-------------
-
-Current Maintainer: Jon Peck <jpeck@fluxsauce.com>
+# Introduction
 
 Generate Errors is a module that provides an user interface for developers to
 manually generate errors. There are four options:
@@ -20,15 +17,13 @@ server and so forth. Activity is logged in watchdog.
 This module should not be deployed in any public-facing environment and is
 intended for development and testing purposes only.
 
-INSTALLATION
-------------
+# Installation
 
 Install the module like you would other Drupal modules. This module contains
 no permissions or roles and allows any user - anonymous or authenticated - to
 generate errors.
 
-USAGE
------
+# Usage
 
 Generate Errors adds a normal menu item to /generate_errors - use the new link
 in the menu or navigate directly to the path.
@@ -40,3 +35,7 @@ A status message will be shown describing the generated error, and a log message
 will be recorded in watchdog prior to the triggered error to document who did
 what and when. Additional watchdog log entries may be created by the
 generated error itself, depending on your system configuration.
+
+# Credits
+
+Jon Peck <jpeck@fluxsauce.com>
